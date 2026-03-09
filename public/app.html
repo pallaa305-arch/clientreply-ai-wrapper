@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ClientReply AI Demo</title>
+  <style>body{font-family:Arial;max-width:860px;margin:24px auto;padding:0 12px}textarea,input,select{width:100%;margin:6px 0;padding:10px}button{padding:10px 14px}pre{background:#f5f7ff;padding:12px;border-radius:8px;white-space:pre-wrap}</style>
+</head>
+<body>
+  <h2>ClientReply AI Demo</h2>
+  <form id="f">
+    <input name="userKey" placeholder="userKey" value="demo-user" required />
+    <textarea name="leadText" placeholder="Lead requirement" required>Need landing page + WhatsApp automation</textarea>
+    <input name="budget" placeholder="Budget" value="₹15000" required />
+    <input name="timeline" placeholder="Timeline" value="4 days" required />
+    <input name="serviceType" placeholder="Service Type" value="Web + Automation" required />
+    <select name="tone"><option>professional</option><option>confident</option></select>
+    <button>Generate</button>
+  </form>
+  <pre id="out"></pre>
+  <script>
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const body = Object.fromEntries(new FormData(f).entries());
+      const r = await fetch('/api/generate', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      out.textContent = JSON.stringify(await r.json(), null, 2);
+    };
+  </script>
+</body>
+</html>

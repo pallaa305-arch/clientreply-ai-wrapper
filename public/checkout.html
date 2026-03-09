@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Upgrade to Pro</title>
+<style>body{font-family:Arial;max-width:720px;margin:24px auto;padding:0 12px}input,button{width:100%;margin:8px 0;padding:10px}small{color:#666}</style></head>
+<body>
+  <h2>Upgrade to Pro - ₹499/month</h2>
+  <p><small>Submit the website/app where you want to collect payments. Verification takes 24-48 hours.</small></p>
+  <form id="f">
+    <input name="userKey" placeholder="your-user-key" required />
+    <input name="email" type="email" placeholder="email (optional)" />
+    <button>Create Payment Link</button>
+  </form>
+  <p id="msg"></p>
+  <script>
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      msg.textContent = 'Creating payment link...';
+      const body = Object.fromEntries(new FormData(f).entries());
+      const r = await fetch('/api/payments/razorpay/create-link', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      const j = await r.json();
+      if (!r.ok) { msg.textContent = j.error || 'Failed'; return; }
+      location.href = j.short_url;
+    };
+  </script>
+</body>
+</html>
