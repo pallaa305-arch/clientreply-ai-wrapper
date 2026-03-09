@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: clientreply-ai-wrapper
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
