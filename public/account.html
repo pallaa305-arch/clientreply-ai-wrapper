@@ -78,6 +78,15 @@
     </div>
 
     <div class="card" style="margin-top:20px">
+      <h2>🔑 Your User Key</h2>
+      <p style="color:#666;margin-bottom:12px">Share this key when contacting support for activations</p>
+      <div style="background:#f5f7ff;padding:16px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <code id="userKeyDisplay" style="font-size:14px;word-break:break-all;flex:1"></code>
+        <button onclick="copyKey()" style="padding:8px 16px;background:#6366f1;color:white;border:none;border-radius:6px;cursor:pointer">Copy</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
       <h2>📝 Account Settings</h2>
       <div id="msg"></div>
       <div class="form-group">
@@ -100,6 +109,9 @@
   <script>
     const userKey = localStorage.getItem('clientreply_userkey');
     if (!userKey) window.location.href = '/login.html';
+
+    // Display user key
+    document.getElementById('userKeyDisplay').textContent = userKey;
 
     async function loadData() {
       try {
@@ -159,6 +171,11 @@
       localStorage.removeItem('clientreply_email');
       localStorage.removeItem('clientreply_name');
       window.location.href = '/login.html';
+    }
+
+    function copyKey() {
+      navigator.clipboard.writeText(userKey);
+      alert('User key copied!');
     }
 
     loadData();
