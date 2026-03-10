@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Auto Activate</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;padding:20px}
+  .card{background:white;padding:40px;border-radius:16px;text-align:center;max-width:400px;width:100%}
+  h1{color:#6366f1}
+  .btn{padding:16px 32px;background:#22c55e;color:white;border:none;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;margin:10px}
+  .result{padding:20px;border-radius:10px;margin:20px 0;font-size:18px}
+  .success{background:#dcfce7;color:#16a34a}
+  .error{background:#fee2e2;color:#dc2626}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔧 Auto Activate</h1>
+    <p id="status">Activating...</p>
+    <div id="result" class="result" style="display:none"></div>
+  </div>
+
+  <script>
+    // Get userKey from URL
+    const params = new URLSearchParams(window.location.search);
+    const userKey = params.get('key');
+    const adminSecret = '7834982858@De';
+    
+    if (!userKey) {
+      document.getElementById('status').textContent = 'No userKey provided!';
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').className = 'result error';
+      document.getElementById('result').innerHTML = 'Add ?key=USER_KEY to URL';
+    } else {
+      document.getElementById('status').textContent = 'Activating user: ' + userKey;
+      
+      // Auto activate on page load
+      fetch('https://clientreply-ai-wrapper.onrender.com/api/pro/manual-activate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userKey: userKey, adminSecret: adminSecret})
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('result').style.display = 'block';
+        if (data.success) {
+          document.getElementById('result').className = 'result success';
+          document.getElementById('result').innerHTML = '✅ SUCCESS!<br>' + data.message;
+          document.getElementById('status').textContent = 'Done!';
+        } else {
+          document.getElementById('result').className = 'result error';
+          document.getElementById('result').innerHTML = '❌ Error:<br>' + data.error;
+        }
+      })
+      .catch(e => {
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('result').className = 'result error';
+        document.getElementById('result').innerHTML = '❌ Error:<br>' + e.message;
+      });
+    }
+  </script>
+</body>
+</html>
