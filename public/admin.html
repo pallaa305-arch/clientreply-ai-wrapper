@@ -54,12 +54,18 @@
   <script>
     // Get admin secret from URL or use default
     const params = new URLSearchParams(window.location.search);
-    const ADMIN_SECRET = params.get('secret') || '7834982858@De';
+    let ADMIN_SECRET = params.get('secret') || '7834982858@De';
+    
+    // Add secret to URL if not present
+    if (!params.has('secret') && !window.location.search.includes('secret=')) {
+      const newUrl = window.location.pathname + '?secret=' + encodeURIComponent(ADMIN_SECRET) + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    }
     
     async function loadUsers() {
       try {
         document.getElementById('users').innerHTML = 'Loading...';
-        const res = await fetch('/api/users/list?adminSecret=' + ADMIN_SECRET);
+        const res = await fetch('/api/users/list?adminSecret=' + encodeURIComponent(ADMIN_SECRET));
         const data = await res.json();
         
         if (data.error) {
@@ -98,7 +104,7 @@
       }
       
       try {
-        const res = await fetch('/api/pro/manual-activate', {
+        const res = await fetch('/api/pro/manual-activate?adminSecret=' + encodeURIComponent(ADMIN_SECRET), {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({userKey, adminSecret: ADMIN_SECRET})
