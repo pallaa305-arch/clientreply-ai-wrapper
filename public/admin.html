@@ -2,72 +2,100 @@
 <html>
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Admin - Customer Activations</title>
 <style>
+  *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#f5f5f5}
-  h1{color:#1a1a2e}
+  h1{color:#1a1a2e;margin-bottom:20px}
   .card{background:white;padding:20px;border-radius:12px;margin:16px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
   .user{border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;align-items:center}
   .user:last-child{border:none}
   .badge{background:#22c55e;color:white;padding:4px 12px;border-radius:20px;font-size:12px}
   .badge-free{background:#6b7280}
-  button{background:#6366f1;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer}
+  button{background:#6366f1;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:16px}
   button:hover{background:#4f46e5}
-  .form{background:white;padding:20px;border-radius:12px;margin-top:20px}
-  input{padding:10px;border:1px solid #ddd;border-radius:8px;width:200px;margin-right:10px}
-  .note{background:#fef3c7;padding:12px;border-radius:8px;margin:16px 0}
-  .success{background:#dcfce7;color:#16a34a;padding:12px;border-radius:8px;margin:16px 0;display:none}
+  .form{background:white;padding:24px;border-radius:12px;margin-top:20px}
+  input{padding:12px;border:2px solid #ddd;border-radius:8px;width:300px;margin-right:12px;font-size:16px}
+  .note{background:#fef3c7;padding:16px;border-radius:8px;margin:16px 0}
+  .success{background:#dcfce7;color:#16a34a;padding:16px;border-radius:8px;margin:16px 0;display:none}
+  .error{background:#fee2e2;color:#dc2626;padding:16px;border-radius:8px;margin:16px 0;display:none}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end}
 </style>
 </head>
 <body>
-  <h1>🔧 Admin - Customer Activations</h1>
+  <h1>🔧 Admin Panel - ClientReply AI</h1>
   
   <div class="note">
     <strong>📋 How to activate a customer:</strong><br>
     1. Customer pays ₹499 via UPI<br>
-    2. Customer sends screenshot on WhatsApp<br>
-    3. Ask for their userKey (or find in logs)<br>
-    4. Enter userKey below and click Activate
+    2. Customer sends screenshot on WhatsApp with their userKey<br>
+    3. Enter userKey below and click Activate<br>
+    4. Customer will get Pro access instantly!
   </div>
 
-  <div id="msg" class="success"></div>
+  <div id="msg-success" class="success"></div>
+  <div id="msg-error" class="error"></div>
 
   <div class="form">
-    <h3>Activate Customer</h3>
-    <input type="text" id="userKey" placeholder="Enter customer userKey">
-    <button onclick="activate()">Activate Pro</button>
+    <h3>🎯 Activate Customer</h3>
+    <div class="grid">
+      <div>
+        <input type="text" id="userKey" placeholder="Enter customer userKey (e.g., user_abc123...)">
+      </div>
+      <div>
+        <button onclick="activate()" style="width:100%">Activate Pro</button>
+      </div>
+    </div>
   </div>
 
   <div class="card">
-    <h3>All Users</h3>
+    <h3>👥 All Users</h3>
     <div id="users">Loading...</div>
   </div>
 
   <script>
-    const ADMIN_SECRET = '7834982858@De';
+    // Get admin secret from URL or use default
+    const params = new URLSearchParams(window.location.search);
+    const ADMIN_SECRET = params.get('secret') || '7834982858@De';
     
     async function loadUsers() {
       try {
+        document.getElementById('users').innerHTML = 'Loading...';
         const res = await fetch('/api/users/list?adminSecret=' + ADMIN_SECRET);
         const data = await res.json();
+        
+        if (data.error) {
+          document.getElementById('users').innerHTML = 'Error: ' + data.error;
+          return;
+        }
+        
         const users = data.users || {};
         let html = '';
+        if (Object.keys(users).length === 0) {
+          html = '<p>No users found</p>';
+        }
         for (const [key, val] of Object.entries(users)) {
           html += \`<div class="user">
             <div>
               <strong>\${key}</strong><br>
-              <small>Created: \${val.createdAt || 'N/A'}</small>
+              <small>\${val.email || 'No email'} | Created: \${val.createdAt ? new Date(val.createdAt).toLocaleDateString() : 'N/A'}</small>
             </div>
-            <span class="badge \${val.pro ? '' : 'badge-free'}">\${val.pro ? '✅ Pro' : 'Free'}</span>
+            <span class="badge \${val.pro ? '' : 'badge-free'}">\${val.pro ? '✅ PRO' : 'Free'}</span>
           </div>\`;
         }
-        document.getElementById('users').innerHTML = html || 'No users found';
+        document.getElementById('users').innerHTML = html;
       } catch(e) {
-        document.getElementById('users').innerHTML = 'Error loading users';
+        document.getElementById('users').innerHTML = 'Error: ' + e.message;
       }
     }
 
     async function activate() {
       const userKey = document.getElementById('userKey').value.trim();
-      if(!userKey) return alert('Please enter userKey');
+      
+      hideMessages();
+      
+      if(!userKey) {
+        showError('Please enter userKey');
+        return;
+      }
       
       try {
         const res = await fetch('/api/pro/manual-activate', {
@@ -76,19 +104,41 @@
           body: JSON.stringify({userKey, adminSecret: ADMIN_SECRET})
         });
         const data = await res.json();
+        
         if(data.success) {
-          document.getElementById('msg').style.display = 'block';
-          document.getElementById('msg').textContent = '✅ ' + data.message;
+          showSuccess('✅ ' + data.message);
+          document.getElementById('userKey').value = '';
           loadUsers();
         } else {
-          alert('Error: ' + data.error);
+          showError('Error: ' + (data.error || 'Unknown error'));
         }
       } catch(e) {
-        alert('Error: ' + e.message);
+        showError('Error: ' + e.message);
       }
     }
 
+    function showSuccess(msg) {
+      document.getElementById('msg-success').textContent = msg;
+      document.getElementById('msg-success').style.display = 'block';
+      document.getElementById('msg-error').style.display = 'none';
+    }
+
+    function showError(msg) {
+      document.getElementById('msg-error').textContent = msg;
+      document.getElementById('msg-error').style.display = 'block';
+      document.getElementById('msg-success').style.display = 'none';
+    }
+
+    function hideMessages() {
+      document.getElementById('msg-success').style.display = 'none';
+      document.getElementById('msg-error').style.display = 'none';
+    }
+
+    // Load users on page load
     loadUsers();
+    
+    // Refresh every 30 seconds
+    setInterval(loadUsers, 30000);
   </script>
 </body>
 </html>

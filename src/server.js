@@ -95,8 +95,10 @@ app.post('/api/pro/manual-activate', (req, res) => {
   const { userKey, adminSecret } = req.body || {};
   const adminPass = process.env.ADMIN_ACTIVATE_SECRET;
   
+  console.log('Activation attempt:', { userKey, adminPass: adminPass ? 'SET' : 'NOT SET', providedSecret: adminSecret ? 'PROVIDED' : 'NOT PROVIDED' });
+  
   if (!userKey) return res.status(400).json({ error: 'userKey required' });
-  if (!adminPass) return res.status(500).json({ error: 'Admin secret not configured' });
+  if (!adminPass) return res.status(500).json({ error: 'Admin secret not configured on server' });
   if (adminPass !== adminSecret) return res.status(403).json({ error: 'Invalid admin secret' });
   
   const users = loadUsers();
@@ -107,7 +109,18 @@ app.post('/api/pro/manual-activate', (req, res) => {
   };
   saveUsers(users);
   
-  return res.json({ success: true, message: 'Pro activated successfully' });
+  console.log('User activated:', userKey);
+  
+  return res.json({ success: true, message: 'Pro activated successfully for ' + userKey });
+});
+
+// Debug endpoint to check env
+app.get('/api/debug/env', (req, res) => {
+  const adminPass = process.env.ADMIN_ACTIVATE_SECRET;
+  return res.json({ 
+    adminSecretSet: !!adminPass,
+    adminSecretValue: adminPass ? 'SET' : 'NOT SET'
+  });
 });
 
 // Check pro status
