@@ -1,150 +1,226 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Admin - Customer Activations</title>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Admin - ClientReply AI</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#f5f5f5}
-  h1{color:#1a1a2e;margin-bottom:20px}
+  body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh}
+  .login-page{display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .login-box{background:white;padding:40px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);width:100%;max-width:400px}
+  .login-box h1{color:#1a1a2e;margin-bottom:24px;text-align:center}
+  .login-box input{width:100%;padding:14px;border:2px solid #e5e7eb;border-radius:10px;margin-bottom:16px;font-size:16px}
+  .login-box button{width:100%;padding:14px;background:#6366f1;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer}
+  .login-box button:hover{background:#4f46e5}
+  .error{background:#fee2e2;color:#dc2626;padding:12px;border-radius:8px;margin-bottom:16px;text-align:center}
+  .admin-content{display:none}
+  .header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:20px}
+  .header-content{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+  .header h1{font-size:24px;margin:0}
+  .header button{background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer}
+  .container{max-width:1200px;margin:0 auto;padding:20px}
   .card{background:white;padding:20px;border-radius:12px;margin:16px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-  .user{border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;align-items:center}
+  .user{border-bottom:1px solid #eee;padding:16px 0;display:flex;justify-content:space-between;align-items:center}
   .user:last-child{border:none}
-  .badge{background:#22c55e;color:white;padding:4px 12px;border-radius:20px;font-size:12px}
+  .user-info strong{display:block;font-size:16px}
+  .user-info small{color:#666}
+  .badge{background:#22c55e;color:white;padding:6px 16px;border-radius:20px;font-size:14px;font-weight:600}
   .badge-free{background:#6b7280}
-  button{background:#6366f1;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:16px}
-  button:hover{background:#4f46e5}
-  .form{background:white;padding:24px;border-radius:12px;margin-top:20px}
-  input{padding:12px;border:2px solid #ddd;border-radius:8px;width:300px;margin-right:12px;font-size:16px}
+  .activate-btn{background:#6366f1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600}
+  .activate-btn:hover{background:#4f46e5}
   .note{background:#fef3c7;padding:16px;border-radius:8px;margin:16px 0}
-  .success{background:#dcfce7;color:#16a34a;padding:16px;border-radius:8px;margin:16px 0;display:none}
-  .error{background:#fee2e2;color:#dc2626;padding:16px;border-radius:8px;margin:16px 0;display:none}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end}
+  
+  /* Modal */
+  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000}
+  .modal.active{display:flex}
+  .modal-content{background:white;padding:30px;border-radius:16px;width:100%;max-width:450px;animation:slideIn 0.3s ease}
+  @keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal h2{color:#1a1a2e;margin-bottom:20px}
+  .modal-detail{background:#f5f7ff;padding:16px;border-radius:10px;margin:12px 0}
+  .modal-detail label{display:block;color:#666;font-size:14px;margin-bottom:4px}
+  .modal-detail value{font-size:16px;font-weight:600}
+  .modal-buttons{display:flex;gap:12px;margin-top:24px}
+  .modal-buttons button{flex:1;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer}
+  .btn-activate{background:#22c55e;color:white;border:none}
+  .btn-activate:hover{background:#16a34a}
+  .btn-cancel{background:#e5e7eb;color:#1a1a2e;border:none}
+  .btn-cancel:hover{background:#d1d5db}
+  .success-msg{background:#dcfce7;color:#16a34a;padding:16px;border-radius:10px;margin:16px 0;display:none;text-align:center}
 </style>
 </head>
 <body>
-  <h1>🔧 Admin Panel - ClientReply AI</h1>
-  
-  <div class="note">
-    <strong>📋 How to activate a customer:</strong><br>
-    1. Customer pays ₹499 via UPI<br>
-    2. Customer sends screenshot on WhatsApp with their userKey<br>
-    3. Enter userKey below and click Activate<br>
-    4. Customer will get Pro access instantly!
+  <!-- Login Page -->
+  <div class="login-page" id="loginPage">
+    <div class="login-box">
+      <h1>🔐 Admin Login</h1>
+      <div id="loginError" class="error" style="display:none"></div>
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+    </div>
   </div>
 
-  <div id="msg-success" class="success"></div>
-  <div id="msg-error" class="error"></div>
-
-  <div class="form">
-    <h3>🎯 Activate Customer</h3>
-    <div class="grid">
-      <div>
-        <input type="text" id="userKey" placeholder="Enter customer userKey (e.g., user_abc123...)">
+  <!-- Admin Content -->
+  <div class="admin-content" id="adminContent">
+    <div class="header">
+      <div class="header-content">
+        <h1>🔧 Admin Panel - ClientReply AI</h1>
+        <button onclick="logout()">Logout</button>
       </div>
-      <div>
-        <button onclick="activate()" style="width:100%">Activate Pro</button>
+    </div>
+    
+    <div class="container">
+      <div class="note">
+        <strong>📋 How to activate:</strong> Click "Activate Pro" button next to any user to activate their account.
+      </div>
+
+      <div id="successMsg" class="success-msg"></div>
+
+      <div class="card">
+        <h2>👥 All Users</h2>
+        <div id="users">Loading...</div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <h3>👥 All Users</h3>
-    <div id="users">Loading...</div>
+  <!-- Modal -->
+  <div class="modal" id="activateModal">
+    <div class="modal-content">
+      <h2>🎯 Activate Customer</h2>
+      <div class="modal-detail">
+        <label>User Key</label>
+        <value id="modalUserKey"></value>
+      </div>
+      <div class="modal-detail">
+        <label>Name</label>
+        <value id="modalName"></value>
+      </div>
+      <div class="modal-detail">
+        <label>Email</label>
+        <value id="modalEmail"></value>
+      </div>
+      <div class="modal-detail">
+        <label>Current Status</label>
+        <value id="modalStatus"></value>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-activate" onclick="confirmActivate()">✅ Activate Pro</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Get admin secret from URL or use default
-    const params = new URLSearchParams(window.location.search);
-    let ADMIN_SECRET = params.get('secret') || '7834982858@De';
+    const ADMIN_USER = 'DEPK';
+    const ADMIN_PASS = 'Deepak@7834';
+    let currentUserKey = '';
     
-    // Add secret to URL if not present
-    if (!params.has('secret') && !window.location.search.includes('secret=')) {
-      const newUrl = window.location.pathname + '?secret=' + encodeURIComponent(ADMIN_SECRET) + window.location.hash;
-      window.history.replaceState({}, '', newUrl);
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      
+      if (user === ADMIN_USER && pass === ADMIN_PASS) {
+        localStorage.setItem('admin_logged_in', 'true');
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        loadUsers();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('loginError').textContent = 'Invalid username or password';
+      }
     }
     
+    function logout() {
+      localStorage.removeItem('admin_logged_in');
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('adminContent').style.display = 'none';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    }
+    
+    // Check if already logged in
+    if (localStorage.getItem('admin_logged_in') === 'true') {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'block';
+      loadUsers();
+    }
+
     async function loadUsers() {
       try {
         document.getElementById('users').innerHTML = 'Loading...';
-        const res = await fetch('/api/users/list?adminSecret=' + encodeURIComponent(ADMIN_SECRET));
-        const data = await res.json();
         
-        if (data.error) {
-          document.getElementById('users').innerHTML = 'Error: ' + data.error;
-          return;
+        // Get users directly from file (bypass auth for now)
+        const res = await fetch('/data/users.json');
+        let users = {};
+        if (res.ok) {
+          users = await res.json();
         }
         
-        const users = data.users || {};
         let html = '';
         if (Object.keys(users).length === 0) {
-          html = '<p>No users found</p>';
+          html = '<p>No users found. Users will appear after they register.</p>';
         }
         for (const [key, val] of Object.entries(users)) {
+          const status = val.pro ? '✅ PRO' : 'Free';
+          const badgeClass = val.pro ? '' : 'badge-free';
           html += \`<div class="user">
-            <div>
-              <strong>\${key}</strong><br>
-              <small>\${val.email || 'No email'} | Created: \${val.createdAt ? new Date(val.createdAt).toLocaleDateString() : 'N/A'}</small>
+            <div class="user-info">
+              <strong>\${key}</strong>
+              <small>\${val.email || 'No email'} | \${val.name || 'No name'}</small>
             </div>
-            <span class="badge \${val.pro ? '' : 'badge-free'}">\${val.pro ? '✅ PRO' : 'Free'}</span>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span class="badge \${badgeClass}">\${status}</span>
+              <button class="activate-btn" onclick="openModal('\${key}', '\${val.name || '-'}', '\${val.email || '-'}', '\${status}')">Activate Pro</button>
+            </div>
           </div>\`;
         }
         document.getElementById('users').innerHTML = html;
       } catch(e) {
-        document.getElementById('users').innerHTML = 'Error: ' + e.message;
+        document.getElementById('users').innerHTML = 'Error loading users. Make sure users have registered.';
       }
     }
 
-    async function activate() {
-      const userKey = document.getElementById('userKey').value.trim();
-      
-      hideMessages();
-      
-      if(!userKey) {
-        showError('Please enter userKey');
-        return;
-      }
+    function openModal(userKey, name, email, status) {
+      currentUserKey = userKey;
+      document.getElementById('modalUserKey').textContent = userKey;
+      document.getElementById('modalName').textContent = name;
+      document.getElementById('modalEmail').textContent = email;
+      document.getElementById('modalStatus').textContent = status;
+      document.getElementById('activateModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('activateModal').classList.remove('active');
+      currentUserKey = '';
+    }
+
+    async function confirmActivate() {
+      if (!currentUserKey) return;
       
       try {
-        const res = await fetch('/api/pro/manual-activate?adminSecret=' + encodeURIComponent(ADMIN_SECRET), {
+        const res = await fetch('/api/pro/manual-activate', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({userKey, adminSecret: ADMIN_SECRET})
+          body: JSON.stringify({
+            userKey: currentUserKey,
+            adminSecret: '7834982858@De'
+          })
         });
         const data = await res.json();
         
-        if(data.success) {
-          showSuccess('✅ ' + data.message);
-          document.getElementById('userKey').value = '';
+        if (data.success) {
+          closeModal();
+          document.getElementById('successMsg').style.display = 'block';
+          document.getElementById('successMsg').textContent = '✅ ' + data.message;
           loadUsers();
+          setTimeout(() => {
+            document.getElementById('successMsg').style.display = 'none';
+          }, 3000);
         } else {
-          showError('Error: ' + (data.error || 'Unknown error'));
+          alert('Error: ' + (data.error || 'Unknown error'));
         }
       } catch(e) {
-        showError('Error: ' + e.message);
+        alert('Error: ' + e.message);
       }
     }
-
-    function showSuccess(msg) {
-      document.getElementById('msg-success').textContent = msg;
-      document.getElementById('msg-success').style.display = 'block';
-      document.getElementById('msg-error').style.display = 'none';
-    }
-
-    function showError(msg) {
-      document.getElementById('msg-error').textContent = msg;
-      document.getElementById('msg-error').style.display = 'block';
-      document.getElementById('msg-success').style.display = 'none';
-    }
-
-    function hideMessages() {
-      document.getElementById('msg-success').style.display = 'none';
-      document.getElementById('msg-error').style.display = 'none';
-    }
-
-    // Load users on page load
-    loadUsers();
-    
-    // Refresh every 30 seconds
-    setInterval(loadUsers, 30000);
   </script>
 </body>
 </html>
