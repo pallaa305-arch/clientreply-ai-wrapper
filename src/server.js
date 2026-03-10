@@ -114,6 +114,26 @@ app.post('/api/pro/manual-activate', (req, res) => {
   return res.json({ success: true, message: 'Pro activated successfully for ' + userKey });
 });
 
+// GET version for easy activation
+app.get('/api/pro/activate', (req, res) => {
+  const { userKey, secret } = req.query || {};
+  const adminPass = process.env.ADMIN_ACTIVATE_SECRET;
+  
+  if (!userKey) return res.status(400).json({ error: 'userKey required' });
+  if (!adminPass) return res.status(500).json({ error: 'Admin secret not configured' });
+  if (adminPass !== secret) return res.status(403).json({ error: 'Invalid secret' });
+  
+  const users = loadUsers();
+  users[userKey] = { 
+    ...users[userKey], 
+    pro: true, 
+    activatedAt: new Date().toISOString() 
+  };
+  saveUsers(users);
+  
+  return res.json({ success: true, message: 'Pro activated for ' + userKey });
+});
+
 // Debug endpoint to check env
 app.get('/api/debug/env', (req, res) => {
   const adminPass = process.env.ADMIN_ACTIVATE_SECRET;

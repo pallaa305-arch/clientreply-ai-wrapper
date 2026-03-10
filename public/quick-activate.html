@@ -1,79 +1,28 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Activating...</title>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Quick Activate</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center}
-  .card{background:white;padding:40px;border-radius:16px;text-align:center;max-width:400px}
-  h1{color:#6366f1;margin-bottom:20px}
+  body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;padding:20px}
+  .card{background:white;padding:40px;border-radius:16px;text-align:center;max-width:400px;width:100%}
+  h1{color:#22c55e}
   .btn{padding:16px 32px;background:#22c55e;color:white;border:none;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;margin:10px}
-  .btn:disabled{background:#9ca3af;cursor:not-allowed}
   .result{padding:20px;border-radius:10px;margin:20px 0;font-size:18px}
   .success{background:#dcfce7;color:#16a34a}
   .error{background:#fee2e2;color:#dc2626}
-  pre{background:#1e293b;color:#e2e8f0;padding:16px;border-radius:8px;margin:16px 0;text-align:left;font-size:14px;overflow-x:auto}
 </style>
 </head>
 <body>
   <div class="card">
-    <h1>🚀 Activate PRO</h1>
-    <p>Click below to activate user</p>
-    <div id="result" style="display:none"></div>
-    <button id="btn" class="btn" onclick="activate()">Activate PRO Now</button>
-    <pre id="debug"></pre>
+    <h1>🚀 Activating...</h1>
+    <div id="result"></div>
   </div>
 
   <script>
     const USER_KEY = 'user_iaoeucjpnmmkaksmj';
-    const ADMIN_SECRET = '7834982858@De';
+    const SECRET = '7834982858@De';
     
-    document.getElementById('debug').textContent = 'Ready to activate: ' + USER_KEY;
-    
-    async function activate() {
-      const btn = document.getElementById('btn');
-      const result = document.getElementById('result');
-      const debug = document.getElementById('debug');
-      
-      btn.disabled = true;
-      btn.textContent = 'Activating...';
-      result.style.display = 'none';
-      
-      try {
-        debug.textContent = 'Sending request to /api/pro/manual-activate...';
-        
-        const res = await fetch('https://clientreply-ai-wrapper.onrender.com/api/pro/manual-activate', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            userKey: USER_KEY,
-            adminSecret: ADMIN_SECRET
-          })
-        });
-        
-        const data = await res.json();
-        
-        debug.textContent = 'Response: ' + JSON.stringify(data, null, 2);
-        
-        result.style.display = 'block';
-        if (data.success) {
-          result.className = 'result success';
-          result.textContent = '✅ SUCCESS! User activated!';
-          btn.textContent = 'Already Activated';
-        } else {
-          result.className = 'result error';
-          result.textContent = '❌ Error: ' + (data.error || 'Unknown error');
-          btn.disabled = false;
-          btn.textContent = 'Try Again';
-        }
-      } catch(e) {
-        debug.textContent = 'Error: ' + e.message;
-        result.style.display = 'block';
-        result.className = 'result error';
-        result.textContent = '❌ Error: ' + e.message;
-        btn.disabled = false;
-        btn.textContent = 'Try Again';
-      }
-    }
+    // Auto activate on page load
+    window.location.href = 'https://clientreply-ai-wrapper.onrender.com/api/pro/activate?userKey=' + USER_KEY + '&secret=' + SECRET;
   </script>
 </body>
 </html>
