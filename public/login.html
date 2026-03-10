@@ -16,19 +16,38 @@
   .features li{color:#374151;margin:8px 0}
   .price-tag{text-align:center;font-size:32px;font-weight:bold;color:#6366f1;margin:16px 0}
   .price-tag span{font-size:14px;color:#666;font-weight:normal}
+  .tabs{display:flex;margin-bottom:20px}
+  .tab{flex:1;padding:12px;text-align:center;cursor:pointer;border-bottom:2px solid #e5e7eb;color:#666}
+  .tab.active{border-color:#6366f1;color:#6366f1;font-weight:600}
+  .hidden{display:none}
 </style>
 </head>
 <body>
   <div class="card">
     <h1>ClientReply AI</h1>
-    <p class="subtitle">Login or Sign Up</p>
+    <p class="subtitle" id="subtitle">Login to your account</p>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('login')" id="tab-login">Login</div>
+      <div class="tab" onclick="showTab('signup')" id="tab-signup">Sign Up</div>
+    </div>
     
     <div id="msg"></div>
     
+    <!-- Login Form -->
     <div id="login-form">
-      <input type="text" id="email" placeholder="Email" />
-      <input type="text" id="name" placeholder="Your Name" />
-      <button onclick="login()">Continue</button>
+      <input type="email" id="login-email" placeholder="Email" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+    </div>
+    
+    <!-- Sign Up Form -->
+    <div id="signup-form" class="hidden">
+      <input type="text" id="signup-name" placeholder="Your Name" />
+      <input type="email" id="signup-email" placeholder="Email" />
+      <input type="password" id="signup-password" placeholder="Create Password" />
+      <input type="password" id="signup-confirm" placeholder="Confirm Password" />
+      <button onclick="signup()">Create Account</button>
     </div>
     
     <div class="features">
@@ -49,40 +68,93 @@
   </div>
 
   <script>
+    function showTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+      document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('subtitle').textContent = tab === 'login' ? 'Login to your account' : 'Create new account';
+      document.getElementById('msg').innerHTML = '';
+    }
+    
     function generateKey() {
       return 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
     }
     
     async function login() {
-      const email = document.getElementById('email').value.trim();
-      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
       
-      if (!email || !name) {
-        document.getElementById('msg').innerHTML = '<div class="error">Please enter email and name</div>';
+      if (!email || !password) {
+        document.getElementById('msg').innerHTML = '<div class="error">Please enter email and password</div>';
         return;
       }
       
-      // Generate or get userKey
-      let userKey = localStorage.getItem('clientreply_userkey');
-      if (!userKey) {
-        userKey = generateKey();
-        localStorage.setItem('clientreply_userkey', userKey);
-        localStorage.setItem('clientreply_email', email);
-        localStorage.setItem('clientreply_name', name);
+      // Get stored users and check credentials
+      try {
+        const res = await fetch('/api/user/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email, password})
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          localStorage.setItem('clientreply_userkey', data.userKey);
+          localStorage.setItem('clientreply_email', email);
+          window.location.href = '/app.html?userKey=' + data.userKey;
+        } else {
+          document.getElementById('msg').innerHTML = '<div class="error">' + (data.error || 'Invalid credentials') + '</div>';
+        }
+      } catch(e) {
+        document.getElementById('msg').innerHTML = '<div class="error">Login failed. Try signing up.</div>';
       }
+    }
+    
+    async function signup() {
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+      
+      if (!name || !email || !password) {
+        document.getElementById('msg').innerHTML = '<div class="error">Please fill all fields</div>';
+        return;
+      }
+      
+      if (password !== confirm) {
+        document.getElementById('msg').innerHTML = '<div class="error">Passwords do not match</div>';
+        return;
+      }
+      
+      if (password.length < 4) {
+        document.getElementById('msg').innerHTML = '<div class="error">Password must be at least 4 characters</div>';
+        return;
+      }
+      
+      // Generate userKey
+      const userKey = generateKey();
       
       // Save user to server
       try {
         const res = await fetch('/api/user/register', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({userKey, email, name})
+          body: JSON.stringify({userKey, email, name, password})
         });
         const data = await res.json();
-      } catch(e) {}
-      
-      // Redirect to app
-      window.location.href = '/app.html?userKey=' + userKey;
+        
+        if (data.success) {
+          localStorage.setItem('clientreply_userkey', userKey);
+          localStorage.setItem('clientreply_email', email);
+          localStorage.setItem('clientreply_name', name);
+          window.location.href = '/app.html?userKey=' + userKey;
+        } else {
+          document.getElementById('msg').innerHTML = '<div class="error">' + (data.error || 'Registration failed') + '</div>';
+        }
+      } catch(e) {
+        document.getElementById('msg').innerHTML = '<div class="error">Registration failed. Try again.</div>';
+      }
     }
   </script>
 </body>

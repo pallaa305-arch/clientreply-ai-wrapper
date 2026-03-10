@@ -129,7 +129,7 @@ app.get('/api/pro/status', (req, res) => {
 
 // User registration
 app.post('/api/user/register', (req, res) => {
-  const { userKey, email, name } = req.body || {};
+  const { userKey, email, name, password } = req.body || {};
   
   if (!userKey) return res.status(400).json({ error: 'userKey required' });
   
@@ -139,9 +139,26 @@ app.post('/api/user/register', (req, res) => {
   }
   users[userKey].email = email;
   users[userKey].name = name;
+  if (password) users[userKey].password = password;
   saveUsers(users);
   
   return res.json({ success: true, userKey });
+});
+
+// User login
+app.post('/api/user/login', (req, res) => {
+  const { email, password } = req.body || {};
+  
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  
+  const users = loadUsers();
+  for (const [userKey, user] of Object.entries(users)) {
+    if (user.email === email && user.password === password) {
+      return res.json({ success: true, userKey });
+    }
+  }
+  
+  return res.status(401).json({ error: 'Invalid email or password' });
 });
 
 // User update profile
