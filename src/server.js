@@ -1,5 +1,21 @@
 ﻿import express from "express";
 import path from "path";
+import fs from "fs";
+
+const DATA_FILE = path.resolve("data/users.json");
+
+function loadUsers() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    }
+  } catch {}
+  return {};
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(users, null, 2));
+}
 
 const app = express();
 app.use(express.json());
@@ -61,6 +77,36 @@ app.post('/api/payments/razorpay/create-link', async (req, res) => {
   } catch {
     return res.status(500).json({ error: 'create-link failed' });
   }
+});
+
+// Manual activation endpoint (for interim manual payment)
+app.post('/api/pro/manual-activate', (req, res) => {
+  const { userKey, adminSecret } = req.body || {};
+  const adminPass = process.env.ADMIN_ACTIVATE_SECRET;
+  
+  if (!userKey) return res.status(400).json({ error: 'userKey required' });
+  if (!adminPass) return res.status(500).json({ error: 'Admin secret not configured' });
+  if (adminPass !== adminSecret) return res.status(403).json({ error: 'Invalid admin secret' });
+  
+  const users = loadUsers();
+  users[userKey] = { 
+    ...users[userKey], 
+    pro: true, 
+    activatedAt: new Date().toISOString() 
+  };
+  saveUsers(users);
+  
+  return res.json({ success: true, message: 'Pro activated successfully' });
+});
+
+// Check pro status
+app.get('/api/pro/status', (req, res) => {
+  const { userKey } = req.query || {};
+  if (!userKey) return res.status(400).json({ error: 'userKey required' });
+  
+  const users = loadUsers();
+  const user = users[userKey] || {};
+  return res.json({ pro: !!user.pro });
 });
 
 app.listen(process.env.PORT || 8787, () => console.log("running"));
