@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Quick Activate</title>
+<style>
+  body{font-family:Arial;padding:40px;text-align:center}
+  button{padding:20px 40px;font-size:20px;background:#22c55e;color:white;border:none;border-radius:10px;cursor:pointer}
+</style>
+</head>
+<body>
+  <h1>Quick Activate</h1>
+  <p>User: user_iaoeucjpnmmkaksmj</p>
+  <button onclick="activate()">Activate PRO Now</button>
+  <p id="msg"></p>
+  <script>
+    async function activate() {
+      const res = await fetch('/api/pro/manual-activate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          userKey: 'user_iaoeucjpnmmkaksmj',
+          adminSecret: '7834982858@De'
+        })
+      });
+      const data = await res.json();
+      document.getElementById('msg').textContent = JSON.stringify(data);
+    }
+    activate();
+  </script>
+</body>
+</html>
