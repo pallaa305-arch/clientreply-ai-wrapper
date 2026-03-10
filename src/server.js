@@ -106,7 +106,24 @@ app.get('/api/pro/status', (req, res) => {
   
   const users = loadUsers();
   const user = users[userKey] || {};
-  return res.json({ pro: !!user.pro });
+  return res.json({ pro: !!user.pro, email: user.email, name: user.name });
+});
+
+// User registration
+app.post('/api/user/register', (req, res) => {
+  const { userKey, email, name } = req.body || {};
+  
+  if (!userKey) return res.status(400).json({ error: 'userKey required' });
+  
+  const users = loadUsers();
+  if (!users[userKey]) {
+    users[userKey] = { createdAt: new Date().toISOString() };
+  }
+  users[userKey].email = email;
+  users[userKey].name = name;
+  saveUsers(users);
+  
+  return res.json({ success: true, userKey });
 });
 
 // List all users (admin)

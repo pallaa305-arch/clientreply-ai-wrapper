@@ -1,29 +1,165 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ClientReply AI Demo</title>
-  <style>body{font-family:Arial;max-width:860px;margin:24px auto;padding:0 12px}textarea,input,select{width:100%;margin:6px 0;padding:10px}button{padding:10px 14px}pre{background:#f5f7ff;padding:12px;border-radius:8px;white-space:pre-wrap}</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ClientReply AI - Generate Replies</title>
+  <style>
+    body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 12px;background:#f8fafc;min-height:100vh}
+    .header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:20px;border-radius:12px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center}
+    .header h1{margin:0;font-size:24px}
+    .user-info{font-size:14px}
+    .pro-badge{background:#22c55e;padding:4px 12px;border-radius:20px;font-size:12px}
+    .free-badge{background:#fbbf24;color:#1a1a2e;padding:4px 12px;border-radius:20px;font-size:12px}
+    .logout{background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px}
+    textarea,input,select{width:100%;margin:6px 0;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:16px;box-sizing:border-box}
+    textarea{min-height:100px}
+    textarea:focus,input:focus,select:focus{border-color:#6366f1;outline:none}
+    button{background:#6366f1;color:white;border:none;padding:14px 24px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer}
+    button:hover{background:#4f46e5}
+    button:disabled{background:#9ca3af;cursor:not-allowed}
+    pre{background:#1e293b;color:#e2e8f0;padding:16px;border-radius:10px;white-space:pre-wrap;margin:16px 0;font-size:14px}
+    .outputs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+    .output-section{background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+    .output-section h3{margin:0 0 12px;color:#1a1a2e}
+    .upgrade-banner{background:#fef3c7;border:2px solid #f59e0b;padding:16px;border-radius:12px;margin:16px 0}
+    .upgrade-banner a{background:#f59e0b;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:8px}
+    .generations{text-align:center;color:#666;margin-top:12px;font-size:14px}
+    .generations.used{color:#dc2626}
+  </style>
 </head>
 <body>
-  <h2>ClientReply AI Demo</h2>
+  <div class="header">
+    <h1>ClientReply AI</h1>
+    <div class="user-info">
+      <span id="userName"></span>
+      <span id="proBadge" class="pro-badge" style="display:none">PRO</span>
+      <span id="freeBadge" class="free-badge">FREE</span>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div id="upgradeBanner" class="upgrade-banner" style="display:none">
+    <strong>⚡ Upgrade to Pro</strong>
+    <p style="margin:8px 0">Get unlimited generations, priority processing & more!</p>
+    <a href="/checkout.html">Upgrade Now - ₹499/month</a>
+  </div>
+
   <form id="f">
-    <input name="userKey" placeholder="userKey" value="demo-user" required />
-    <textarea name="leadText" placeholder="Lead requirement" required>Need landing page + WhatsApp automation</textarea>
-    <input name="budget" placeholder="Budget" value="₹15000" required />
-    <input name="timeline" placeholder="Timeline" value="4 days" required />
-    <input name="serviceType" placeholder="Service Type" value="Web + Automation" required />
-    <select name="tone"><option>professional</option><option>confident</option></select>
-    <button>Generate</button>
+    <input name="userKey" id="userKey" type="hidden" />
+    <textarea name="leadText" placeholder="What did the client say? (e.g., Need landing page + WhatsApp automation)" required></textarea>
+    <input name="budget" placeholder="Budget (e.g., ₹15000 or $500)" required />
+    <input name="timeline" placeholder="Timeline (e.g., 4 days, 2 weeks)" required />
+    <input name="serviceType" placeholder="Service Type (e.g., Web Development, Marketing, Design)" required />
+    <select name="tone">
+      <option value="professional">Professional</option>
+      <option value="confident">Confident</option>
+      <option value="friendly">Friendly</option>
+      <option value="casual">Casual</option>
+    </select>
+    <button id="generateBtn">Generate Responses</button>
   </form>
-  <pre id="out"></pre>
+  
+  <div id="generations" class="generations"></div>
+
+  <div class="outputs">
+    <div class="output-section">
+      <h3>📱 WhatsApp Reply</h3>
+      <pre id="whatsapp"></pre>
+      <button onclick="copyToClipboard('whatsapp')" style="padding:8px 16px;font-size:14px;background:#25D366">Copy</button>
+    </div>
+    <div class="output-section">
+      <h3>📧 Email Proposal</h3>
+      <pre id="email"></pre>
+      <button onclick="copyToClipboard('email')" style="padding:8px 16px;font-size:14px;background:#6366f1">Copy</button>
+    </div>
+    <div class="output-section">
+      <h3>💼 Bid/Pitch</h3>
+      <pre id="bid"></pre>
+      <button onclick="copyToClipboard('bid')" style="padding:8px 16px;font-size:14px;background:#8b5cf6">Copy</button>
+    </div>
+    <div class="output-section">
+      <h3>📞 Follow-up</h3>
+      <pre id="followup"></pre>
+      <button onclick="copyToClipboard('followup')" style="padding:8px 16px;font-size:14px;background:#ec4899">Copy</button>
+    </div>
+  </div>
+
   <script>
+    let userKey = localStorage.getItem('clientreply_userkey');
+    if (!userKey) {
+      window.location.href = '/login.html';
+    }
+    
+    document.getElementById('userKey').value = userKey;
+    
+    // Check user status
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/pro/status?userKey=' + userKey);
+        const data = await res.json();
+        
+        document.getElementById('userName').textContent = (data.name || 'User') + ' | ';
+        
+        if (data.pro) {
+          document.getElementById('proBadge').style.display = 'inline';
+          document.getElementById('freeBadge').style.display = 'none';
+          document.getElementById('upgradeBanner').style.display = 'none';
+        } else {
+          document.getElementById('freeBadge').style.display = 'inline';
+          document.getElementById('proBadge').style.display = 'none';
+          document.getElementById('upgradeBanner').style.display = 'block';
+        }
+      } catch(e) {
+        console.log(e);
+      }
+    }
+    
+    checkStatus();
+    
     f.onsubmit = async (e) => {
       e.preventDefault();
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      
       const body = Object.fromEntries(new FormData(f).entries());
-      const r = await fetch('/api/generate', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-      out.textContent = JSON.stringify(await r.json(), null, 2);
+      
+      try {
+        const r = await fetch('/api/generate', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        
+        document.getElementById('whatsapp').textContent = data.whatsapp || '';
+        document.getElementById('email').textContent = data.email || '';
+        document.getElementById('bid').textContent = data.bid || '';
+        document.getElementById('followup').textContent = data.followup || '';
+        
+        document.getElementById('generations').textContent = '✓ Generation complete!';
+        document.getElementById('generations').classList.add('used');
+      } catch(e) {
+        alert('Error generating responses');
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Generate Responses';
     };
+    
+    function copyToClipboard(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text);
+      alert('Copied!');
+    }
+    
+    function logout() {
+      localStorage.removeItem('clientreply_userkey');
+      localStorage.removeItem('clientreply_email');
+      localStorage.removeItem('clientreply_name');
+      window.location.href = '/login.html';
+    }
   </script>
 </body>
 </html>

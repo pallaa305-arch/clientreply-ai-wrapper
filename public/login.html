@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Login - ClientReply AI</title>
+<style>
+  body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;padding:20px}
+  .card{background:white;border-radius:16px;padding:40px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+  h1{color:#1a1a2e;margin:0 0 8px;text-align:center}
+  .subtitle{color:#666;text-align:center;margin-bottom:24px}
+  input{width:100%;padding:14px;border:2px solid #e5e7eb;border-radius:10px;margin:8px 0;font-size:16px;box-sizing:border-box}
+  input:focus{border-color:#6366f1;outline:none}
+  button{width:100%;padding:14px;background:#6366f1;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:16px}
+  button:hover{background:#4f46e5}
+  .error{background:#fee2e2;color:#dc2626;padding:12px;border-radius:8px;margin:16px 0;font-size:14px}
+  .success{background:#dcfce7;color:#16a34a;padding:12px;border-radius:8px;margin:16px 0;font-size:14px}
+  .features{background:#f5f7ff;padding:16px;border-radius:10px;margin:20px 0}
+  .features li{color:#374151;margin:8px 0}
+  .price-tag{text-align:center;font-size:32px;font-weight:bold;color:#6366f1;margin:16px 0}
+  .price-tag span{font-size:14px;color:#666;font-weight:normal}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>ClientReply AI</h1>
+    <p class="subtitle">Login or Sign Up</p>
+    
+    <div id="msg"></div>
+    
+    <div id="login-form">
+      <input type="text" id="email" placeholder="Email" />
+      <input type="text" id="name" placeholder="Your Name" />
+      <button onclick="login()">Continue</button>
+    </div>
+    
+    <div class="features">
+      <strong>What you get:</strong>
+      <ul>
+        <li>Generate client replies in seconds</li>
+        <li>Professional email proposals</li>
+        <li>Bid pitches & follow-ups</li>
+        <li>Price justifications</li>
+      </ul>
+      <div class="price-tag">₹499<span>/month</span></div>
+    </div>
+    
+    <p style="text-align:center;font-size:14px;color:#666;">
+      Free: 5 generations/day<br>
+      Pro: Unlimited + Priority
+    </p>
+  </div>
+
+  <script>
+    function generateKey() {
+      return 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    }
+    
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const name = document.getElementById('name').value.trim();
+      
+      if (!email || !name) {
+        document.getElementById('msg').innerHTML = '<div class="error">Please enter email and name</div>';
+        return;
+      }
+      
+      // Generate or get userKey
+      let userKey = localStorage.getItem('clientreply_userkey');
+      if (!userKey) {
+        userKey = generateKey();
+        localStorage.setItem('clientreply_userkey', userKey);
+        localStorage.setItem('clientreply_email', email);
+        localStorage.setItem('clientreply_name', name);
+      }
+      
+      // Save user to server
+      try {
+        const res = await fetch('/api/user/register', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({userKey, email, name})
+        });
+        const data = await res.json();
+      } catch(e) {}
+      
+      // Redirect to app
+      window.location.href = '/app.html?userKey=' + userKey;
+    }
+  </script>
+</body>
+</html>
