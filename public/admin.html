@@ -148,7 +148,7 @@
         document.getElementById('users').innerHTML = 'Loading...';
         
         // Get users directly from file (bypass auth for now)
-        const res = await fetch('/data/users.json');
+        const res = await fetch('/api/users/list?adminSecret=7834982858@De');
         let users = {};
         if (res.ok) {
           users = await res.json();
