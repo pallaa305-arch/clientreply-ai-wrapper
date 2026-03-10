@@ -32,14 +32,25 @@ app.post("/api/generate", (req, res) => {
   if (!userKey || !leadText || !budget || !timeline || !serviceType) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+  
+  // Track usage
+  const users = loadUsers();
+  if (!users[userKey]) {
+    users[userKey] = { createdAt: new Date().toISOString() };
+  }
+  if (!users[userKey].generations) users[userKey].generations = 0;
+  users[userKey].generations += 1;
+  users[userKey].lastGeneration = new Date().toISOString();
+  saveUsers(users);
+  
   return res.json({
     success: true,
     outputs: {
-      whatsapp_reply: `I can handle this ${serviceType}. Timeline: ${timeline}. Budget around ${budget}.`,
-      email_proposal: `Thanks for sharing: ${leadText}. I can deliver in ${timeline} within ${budget}.`,
-      bid_pitch: `Experienced in ${serviceType}. Can deliver in ${timeline}.`,
-      follow_up: "Following up—want a milestone-wise execution plan?",
-      price_justification: `Pricing ${budget} includes planning, execution, QA, and revisions.`
+      whatsapp: `Thanks for reaching out! I'd be happy to help with your ${serviceType} requirement. Based on your budget of ${budget} and timeline of ${timeline}, I can deliver a quality solution. Would you like me to share a detailed proposal?`,
+      email: `Subject: Re: ${leadText}\n\nHi,\n\nThank you for your interest in my ${serviceType} services.\n\nBased on your requirements:\n- Budget: ${budget}\n- Timeline: ${timeline}\n\nI'm confident I can deliver a solution that exceeds your expectations. Let me know if you'd like to discuss further.\n\nBest regards`,
+      bid: `Hi,\n\nThank you for considering me for your ${serviceType} project.\n\nI understand you need:\n- ${leadText}\n- Budget: ${budget}\n- Timeline: ${timeline}\n\nMy approach ensures quality delivery within your timeline. I'm ready to start immediately.\n\nLet's connect to discuss details.`,
+      followup: `Hi,\n\nJust following up on our previous conversation about ${serviceType}.\n\nI wanted to check if you had any questions about the proposal? I'm happy to clarify or make adjustments as needed.\n\nLooking forward to hearing from you.`,
+      pricejustification: `The pricing of ${budget} for this ${serviceType} project is justified because:\n\n1. Quality assurance and multiple revision rounds\n2. Professional project management\n3. Post-delivery support\n4. Industry-standard tools and technologies\n5. Time-bound delivery with milestones`
     }
   });
 });
@@ -106,7 +117,14 @@ app.get('/api/pro/status', (req, res) => {
   
   const users = loadUsers();
   const user = users[userKey] || {};
-  return res.json({ pro: !!user.pro, email: user.email, name: user.name });
+  return res.json({ 
+    pro: !!user.pro, 
+    email: user.email, 
+    name: user.name,
+    createdAt: user.createdAt,
+    generations: user.generations || 0,
+    activatedAt: user.activatedAt
+  });
 });
 
 // User registration
@@ -124,6 +142,25 @@ app.post('/api/user/register', (req, res) => {
   saveUsers(users);
   
   return res.json({ success: true, userKey });
+});
+
+// User update profile
+app.post('/api/user/update', (req, res) => {
+  const { userKey, email, name } = req.body || {};
+  
+  if (!userKey) return res.status(400).json({ error: 'userKey required' });
+  
+  const users = loadUsers();
+  if (!users[userKey]) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  if (email) users[userKey].email = email;
+  if (name) users[userKey].name = name;
+  users[userKey].updatedAt = new Date().toISOString();
+  saveUsers(users);
+  
+  return res.json({ success: true });
 });
 
 // List all users (admin)
