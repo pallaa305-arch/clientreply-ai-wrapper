@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Admin - Customer Activations</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#f5f5f5}
+  h1{color:#1a1a2e}
+  .card{background:white;padding:20px;border-radius:12px;margin:16px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+  .user{border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;align-items:center}
+  .user:last-child{border:none}
+  .badge{background:#22c55e;color:white;padding:4px 12px;border-radius:20px;font-size:12px}
+  .badge-free{background:#6b7280}
+  button{background:#6366f1;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer}
+  button:hover{background:#4f46e5}
+  .form{background:white;padding:20px;border-radius:12px;margin-top:20px}
+  input{padding:10px;border:1px solid #ddd;border-radius:8px;width:200px;margin-right:10px}
+  .note{background:#fef3c7;padding:12px;border-radius:8px;margin:16px 0}
+  .success{background:#dcfce7;color:#16a34a;padding:12px;border-radius:8px;margin:16px 0;display:none}
+</style>
+</head>
+<body>
+  <h1>🔧 Admin - Customer Activations</h1>
+  
+  <div class="note">
+    <strong>📋 How to activate a customer:</strong><br>
+    1. Customer pays ₹499 via UPI<br>
+    2. Customer sends screenshot on WhatsApp<br>
+    3. Ask for their userKey (or find in logs)<br>
+    4. Enter userKey below and click Activate
+  </div>
+
+  <div id="msg" class="success"></div>
+
+  <div class="form">
+    <h3>Activate Customer</h3>
+    <input type="text" id="userKey" placeholder="Enter customer userKey">
+    <button onclick="activate()">Activate Pro</button>
+  </div>
+
+  <div class="card">
+    <h3>All Users</h3>
+    <div id="users">Loading...</div>
+  </div>
+
+  <script>
+    const ADMIN_SECRET = '7834982858@De';
+    
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/users/list?adminSecret=' + ADMIN_SECRET);
+        const data = await res.json();
+        const users = data.users || {};
+        let html = '';
+        for (const [key, val] of Object.entries(users)) {
+          html += \`<div class="user">
+            <div>
+              <strong>\${key}</strong><br>
+              <small>Created: \${val.createdAt || 'N/A'}</small>
+            </div>
+            <span class="badge \${val.pro ? '' : 'badge-free'}">\${val.pro ? '✅ Pro' : 'Free'}</span>
+          </div>\`;
+        }
+        document.getElementById('users').innerHTML = html || 'No users found';
+      } catch(e) {
+        document.getElementById('users').innerHTML = 'Error loading users';
+      }
+    }
+
+    async function activate() {
+      const userKey = document.getElementById('userKey').value.trim();
+      if(!userKey) return alert('Please enter userKey');
+      
+      try {
+        const res = await fetch('/api/pro/manual-activate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({userKey, adminSecret: ADMIN_SECRET})
+        });
+        const data = await res.json();
+        if(data.success) {
+          document.getElementById('msg').style.display = 'block';
+          document.getElementById('msg').textContent = '✅ ' + data.message;
+          loadUsers();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch(e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

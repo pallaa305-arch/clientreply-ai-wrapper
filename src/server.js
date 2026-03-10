@@ -109,4 +109,16 @@ app.get('/api/pro/status', (req, res) => {
   return res.json({ pro: !!user.pro });
 });
 
+// List all users (admin)
+app.get('/api/users/list', (req, res) => {
+  const { adminSecret } = req.query || {};
+  const adminPass = process.env.ADMIN_ACTIVATE_SECRET;
+  
+  if (!adminPass) return res.status(500).json({ error: 'Admin secret not configured' });
+  if (adminPass !== adminSecret) return res.status(403).json({ error: 'Invalid admin secret' });
+  
+  const users = loadUsers();
+  return res.json({ users });
+});
+
 app.listen(process.env.PORT || 8787, () => console.log("running"));
