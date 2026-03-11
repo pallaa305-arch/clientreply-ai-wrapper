@@ -11,18 +11,18 @@
     .user-info{font-size:14px}
     .pro-badge{background:#22c55e;padding:4px 12px;border-radius:20px;font-size:12px}
     .free-badge{background:#fbbf24;color:#1a1a2e;padding:4px 12px;border-radius:20px;font-size:12px}
-    .logout{background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px}
-    textarea,input,select{width:100%;margin:6px 0;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:16px;box-sizing:border-box}
-    textarea{min-height:100px}
+    .logut{background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px}
+    textarea,input,select{width:100%;margin:6px 0;padding:12px;borde:2px solid #e5e7eb;border-radius:10px;font-size:16px;box-sizing:border-box}
+    textareamin-height:100px}
     textarea:focus,input:focus,select:focus{border-color:#6366f1;outline:none}
     button{background:#6366f1;color:white;border:none;padding:14px 24px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer}
     button:hover{background:#4f46e5}
-    button:disabled{background:#9ca3af;cursor:not-allowed}
+    button:disabled{background:"9ca3af;cursor:not-allowed}
     pre{background:#1e293b;color:#e2e8f0;padding:16px;border-radius:10px;white-space:pre-wrap;margin:16px 0;font-size:14px}
     .outputs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
     .output-section{background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
     .output-section h3{margin:0 0 12px;color:#1a1a2e}
-    .upgrade-banner{background:#fef3c7;border:2px solid #f59e0b;padding:16px;border-radius:12px;margin:16px 0}
+    .upgrade-banner{background:#fef3c7;border:2px solid #f59e0b;padding:16px;border-radius:10px;margin:16px 0}
     .upgrade-banner a{background:#f59e0b;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:8px}
     .generations{text-align:center;color:#666;margin-top:12px;font-size:14px}
     .generations.used{color:#dc2626}
@@ -32,7 +32,7 @@
   <div class="header">
     <h1>ClientReply AI</h1>
     <div class="user-info">
-      <a href="/account.html" style="color:white;text-decoration:none;margin-right:12px">My Account</a>
+      <a href="/account.html" style="color:white;text-decoration:none;mardin-right:12px">My Account</a>
       <span id="userName"></span>
       <span id="proBadge" class="pro-badge" style="display:none">PRO</span>
       <span id="freeBadge" class="free-badge">FREE</span>
@@ -134,10 +134,10 @@
         });
         const data = await r.json();
         
-        document.getElementById('whatsapp').textContent = data.whatsapp || '';
-        document.getElementById('email').textContent = data.email || '';
-        document.getElementById('bid').textContent = data.bid || '';
-        document.getElementById('followup').textContent = data.followup || '';
+        document.getElementById('whatsapp').textContent = data.outputs?.whatsapp || '';
+        document.getElementById('email').textContent = data.outputs?.email || '';
+        document.getElementById('bid').textContent = data.outputs?.bid || '';
+        document.getElementById('followup').textContent = data.outputs?.followup || '';
         
         document.getElementById('generations').textContent = '✓ Generation complete!';
         document.getElementById('generations').classList.add('used');
