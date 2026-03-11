@@ -42,6 +42,17 @@
   </div>
   
   <div class="container">
+    <div class="card">
+      <h2>Admin Login</h2>
+      <p style="color:#666;margin:8px 0 16px">Enter the admin secret to view users and activate Pro.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <input id="adminSecretInput" type="password" placeholder="Admin secret" style="flex:1;min-width:220px;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:16px" />
+        <button class="activate-btn" onclick="saveAdminSecret()">Save & Load Users</button>
+        <button class="btn-cancel" onclick="clearAdminSecret()">Clear</button>
+      </div>
+      <div id="adminMsg" style="margin-top:12px;color:#dc2626"></div>
+    </div>
+
     <div class="note">
       <strong>📋 How to activate:</strong> Click "Activate Pro" button next to any user to activate their account.
     </div>
@@ -81,22 +92,47 @@
     </div>
   </div>
 
-  <script>
-    const ADMIN_SECRET = '7834982858@De';
+    <script>
     let currentUserKey = '';
+
+    function getAdminSecret() {
+      return localStorage.getItem('clientreply_admin_secret') || '';
+    }
+
+    function saveAdminSecret() {
+      const value = document.getElementById('adminSecretInput').value.trim();
+      if (!value) {
+        document.getElementById('adminMsg').textContent = 'Please enter admin secret.';
+        return;
+      }
+      localStorage.setItem('clientreply_admin_secret', value);
+      document.getElementById('adminMsg').textContent = '';
+      loadUsers();
+    }
+
+    function clearAdminSecret() {
+      localStorage.removeItem('clientreply_admin_secret');
+      document.getElementById('adminSecretInput').value = '';
+      document.getElementById('users').innerHTML = 'Admin secret cleared. Please enter it above.';
+    }
 
     async function loadUsers() {
       try {
         document.getElementById('users').innerHTML = 'Loading...';
-        
-        const res = await fetch('/api/users/list?adminSecret=' + encodeURIComponent(ADMIN_SECRET));
+        const secret = getAdminSecret();
+        if (!secret) {
+          document.getElementById('users').innerHTML = 'Please enter admin secret above.';
+          return;
+        }
+
+        const res = await fetch('/api/users/list?adminSecret=' + encodeURIComponent(secret));
         const data = await res.json();
-        
+
         if (data.error) {
           document.getElementById('users').innerHTML = 'Error: ' + data.error;
           return;
         }
-        
+
         const users = data.users || {};
         let html = '';
         if (Object.keys(users).length === 0) {
@@ -138,18 +174,23 @@
 
     async function confirmActivate() {
       if (!currentUserKey) return;
-      
+      const secret = getAdminSecret();
+      if (!secret) {
+        alert('Admin secret missing. Please enter it above.');
+        return;
+      }
+
       try {
         const res = await fetch('/api/pro/manual-activate', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             userKey: currentUserKey,
-            adminSecret: ADMIN_SECRET
+            adminSecret: secret
           })
         });
         const data = await res.json();
-        
+
         if (data.success) {
           closeModal();
           document.getElementById('successMsg').style.display = 'block';
@@ -166,8 +207,12 @@
       }
     }
 
-    // Load users on page load
-    loadUsers();
+    // Load users on page load if secret already saved
+    document.getElementById('adminSecretInput').value = getAdminSecret();
+    if (getAdminSecret()) loadUsers();
   </script>
 </body>
 </html>
+
+
+

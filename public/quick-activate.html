@@ -17,12 +17,18 @@
     <div id="result"></div>
   </div>
 
-  <script>
-    const USER_KEY = 'user_iaoeucjpnmmkaksmj';
-    const SECRET = '7834982858@De';
-    
-    // Auto activate on page load
-    window.location.href = 'https://clientreply-ai-wrapper.onrender.com/api/pro/activate?userKey=' + USER_KEY + '&secret=' + SECRET;
+    <script>
+    const params = new URLSearchParams(window.location.search);
+    const userKey = params.get('key');
+    const savedSecret = localStorage.getItem('clientreply_admin_secret') || '';
+    const secret = params.get('secret') || savedSecret;
+
+    if (!userKey || !secret) {
+      document.getElementById('result').innerHTML = 'Please provide ?key=USER_KEY&secret=ADMIN_SECRET or login on admin page first.';
+    } else {
+      window.location.href = '/api/pro/activate?userKey=' + encodeURIComponent(userKey) + '&secret=' + encodeURIComponent(secret);
+    }
   </script>
 </body>
 </html>
+

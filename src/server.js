@@ -1,4 +1,5 @@
-﻿import express from "express";
+import "dotenv/config";
+import express from "express";
 import path from "path";
 import fs from "fs";
 
@@ -226,3 +227,5 @@ app.get('/api/users/list', (req, res) => {
 });
 
 app.listen(process.env.PORT || 8787, () => console.log("running"));
+
+

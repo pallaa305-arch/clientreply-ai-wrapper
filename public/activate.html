@@ -18,44 +18,50 @@
     <div id="result" class="result" style="display:none"></div>
   </div>
 
-  <script>
-    // Get userKey from URL
+    <script>
     const params = new URLSearchParams(window.location.search);
     const userKey = params.get('key');
-    const adminSecret = '7834982858@De';
-    
-    if (!userKey) {
-      document.getElementById('status').textContent = 'No userKey provided!';
-      document.getElementById('result').style.display = 'block';
-      document.getElementById('result').className = 'result error';
-      document.getElementById('result').innerHTML = 'Add ?key=USER_KEY to URL';
-    } else {
-      document.getElementById('status').textContent = 'Activating user: ' + userKey;
-      
-      // Auto activate on page load
-      fetch('https://clientreply-ai-wrapper.onrender.com/api/pro/manual-activate', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userKey: userKey, adminSecret: adminSecret})
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('result').style.display = 'block';
+    const savedSecret = localStorage.getItem('clientreply_admin_secret') || '';
+    const urlSecret = params.get('secret') || '';
+    const adminSecret = urlSecret || savedSecret;
+
+    function showResult(type, html) {
+      const result = document.getElementById('result');
+      result.style.display = 'block';
+      result.className = 'result ' + type;
+      result.innerHTML = html;
+    }
+
+    async function activateNow(secret) {
+      try {
+        const res = await fetch('/api/pro/manual-activate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({userKey: userKey, adminSecret: secret})
+        });
+        const data = await res.json();
         if (data.success) {
-          document.getElementById('result').className = 'result success';
-          document.getElementById('result').innerHTML = '✅ SUCCESS!<br>' + data.message;
+          showResult('success', '✅ SUCCESS!<br>' + data.message);
           document.getElementById('status').textContent = 'Done!';
         } else {
-          document.getElementById('result').className = 'result error';
-          document.getElementById('result').innerHTML = '❌ Error:<br>' + data.error;
+          showResult('error', '❌ Error:<br>' + data.error);
         }
-      })
-      .catch(e => {
-        document.getElementById('result').style.display = 'block';
-        document.getElementById('result').className = 'result error';
-        document.getElementById('result').innerHTML = '❌ Error:<br>' + e.message;
-      });
+      } catch(e) {
+        showResult('error', '❌ Error:<br>' + e.message);
+      }
+    }
+
+    if (!userKey) {
+      document.getElementById('status').textContent = 'No userKey provided!';
+      showResult('error', 'Add ?key=USER_KEY to URL');
+    } else if (!adminSecret) {
+      document.getElementById('status').textContent = 'Admin secret required';
+      showResult('error', 'Add ?secret=ADMIN_SECRET to URL or login on admin page first.');
+    } else {
+      document.getElementById('status').textContent = 'Activating user: ' + userKey;
+      activateNow(adminSecret);
     }
   </script>
 </body>
 </html>
+
